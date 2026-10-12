@@ -1,0 +1,10 @@
+llm_provider:
+  name: "groq"
+  api_key: "your_api_key_here"
+
+  models:
+    - "openai/gpt-oss-20b"
+    - "openai/gpt-oss-safeguard-20b"  
+    - "meta-llama/llama-prompt-guard-2-22m"
+    - "meta-llama/llama-prompt-guard-2-86m"
+    - "openai/gpt-oss-120b"

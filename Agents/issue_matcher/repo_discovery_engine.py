@@ -12,6 +12,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from schemas.repo import RepositoryRecommendation
+from DATABASE.supabase_db import save_repository_search
 
 recommendations_adapter = TypeAdapter(list[RepositoryRecommendation])
 
@@ -66,13 +67,19 @@ class RepoDiscoveryAgent:
                     result = json.loads(text_content)
 
             if isinstance(result, dict):
-                return result.get("items", [])
-
-            return result if isinstance(result, list) else []
+                repositories = result.get("items", [])
+            else:
+                repositories = result if isinstance(result, list) else []
 
         except Exception as e:
             print(e)
             return []
+
+        try:
+            save_repository_search(query, repositories)
+        except Exception as e:
+            print(f"Could not store repository search history in Supabase: {e}")
+        return repositories
 
     async def retrieve_candidates(
         self,
