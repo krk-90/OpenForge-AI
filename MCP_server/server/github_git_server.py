@@ -19,6 +19,7 @@ _READ_ONLY_TOOLS = {
     "get_tree",
     "list_pull_requests",
     "get_pull_request",
+    "get_pull_request_files",
     "list_issues",
     "get_issue",
     "get_me",
