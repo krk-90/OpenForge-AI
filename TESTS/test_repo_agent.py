@@ -1,4 +1,5 @@
 import asyncio
+import json
 import sys
 from pathlib import Path
 
@@ -27,7 +28,13 @@ async def main():
         ]
     )
 
-    print(result)
+    print(
+        json.dumps(
+            [recommendation.model_dump() for recommendation in result],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 if __name__ == "__main__":

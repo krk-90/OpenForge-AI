@@ -1,18 +1,19 @@
 import json
 import os
+import sys
+from pathlib import Path
 
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
-from pydantic import BaseModel
+from pydantic import TypeAdapter
 
+project_root = str(Path(__file__).resolve().parents[2])
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-class RepositoryRecommendation(BaseModel):
-    repository: str
-    score: int
-    stars: int
-    language: str
-    reason: str
+from schemas.repo import RepositoryRecommendation
 
+recommendations_adapter = TypeAdapter(list[RepositoryRecommendation])
 
 class RepoDiscoveryAgent:
 
@@ -30,9 +31,7 @@ class RepoDiscoveryAgent:
         query: str,
         limit: int = 10
     ):
-        """
-        Uses GitHub MCP Tool
-        """
+        
         search_tool = None
 
         for tool in self.tools:
@@ -136,7 +135,7 @@ class RepoDiscoveryAgent:
         self,
         repos,
         skills
-    ):
+    ) -> list[RepositoryRecommendation]:
         ranking_candidates = [
             {
                 "repository": repo.get("full_name") or repo.get("name"),
@@ -185,7 +184,7 @@ Return JSON:
             [HumanMessage(content=prompt)]
         )
 
-        return response.content
+        return recommendations_adapter.validate_json(response.content)
 
     async def discover(
         self,
