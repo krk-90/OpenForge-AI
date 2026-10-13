@@ -18,7 +18,7 @@ COPY --from=github-mcp-server /server/github-mcp-server /usr/local/bin/github-mc
 COPY requirements.txt requirements-rag.txt ./
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
-    && python -c "from langchain_mcp_adapters.client import MultiServerMCPClient; from mcp.shared.context import RequestContext; print('MCP adapter imports OK')" \
+    && python -c "from langchain_mcp_adapters.client import MultiServerMCPClient; print('MCP adapter imports OK')" \
     && useradd --create-home --uid 10001 appuser
 COPY --chown=appuser:appuser . ./
 COPY --from=frontend-build --chown=appuser:appuser /frontend/dist ./APP/Frontend/dist
