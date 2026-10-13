@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from APP.core.tracing import trace_step
+from APP.core.resilience import invoke_with_fallback
 
 
 class PRReviewFinding(BaseModel):
@@ -198,7 +199,7 @@ Additional context:
 Diff:
 {review_diff}
 """
-        response = await self.llm.ainvoke(prompt)
+        response = await invoke_with_fallback(self.llm, prompt, operation="pr_review")
         content = response.content if hasattr(response, "content") else response
         if not isinstance(content, (str, bytes, bytearray)):
             raise TypeError("Review model returned a non-text response")
