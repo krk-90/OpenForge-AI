@@ -4,7 +4,7 @@ import {
   ArrowUp, BookOpen, Check, ChevronDown, CircleHelp, Clock3,
   Code2, Command, ExternalLink, FileCode2, GitBranch, Github, Layers3,
   LoaderCircle, LogOut, Menu, MessageSquare, Plus, Search, Settings2,
-  Sparkles, X,
+  Sparkles, Sun, Moon, X,
 } from "lucide-react";
 import "./styles.css";
 
@@ -204,7 +204,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem("openforge-theme") || "light"; } catch { return "light"; } });
   const scrollRef = useRef(null);
+
+  useEffect(() => {
+    try { localStorage.setItem("openforge-theme", theme); } catch {}
+  }, [theme]);
   const newSessionIds = useRef(new Set());
   const activeSession = sessions.find((item) => item.session_id === activeId);
   const activeAgent = AGENTS.find((agent) => agent.id === selectedAgent) || AGENTS[0];
@@ -398,7 +403,7 @@ function App() {
 
   const initials = (email || "OF").slice(0, 2).toUpperCase();
   return (
-    <main className={`workspace ${mobileMenu ? "menu-open" : ""}`}>
+    <main className={`workspace ${mobileMenu ? "menu-open" : ""}`} data-theme={theme}>
       <aside className="sidebar">
         <div className="sidebar-head">
           <a className="wordmark" href="#workspace" aria-label="OpenForge home"><span className="mark"><Command size={18} /></span>OpenForge</a>
@@ -431,6 +436,7 @@ function App() {
           <button className="icon-button mobile-menu-button" type="button" aria-label="Open menu" onClick={() => setMobileMenu(true)}><Menu size={19} /></button>
           <div className="breadcrumbs"><span>Workspace</span><span className="crumb-slash">/</span><strong>{activeSession?.title || "New contribution"}</strong></div>
           <div className="topbar-actions">
+            <button className="icon-button theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`} title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>{theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}<span>{theme === "dark" ? "Light" : "Dark"}</span></button>
             <span className="connection"><span className="live-dot" />CONNECTED</span>
             <select className="agent-mode" aria-label="Select agent" value={selectedAgent} onChange={(event) => setSelectedAgent(event.target.value)}>
               {AGENTS.map((agent) => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
