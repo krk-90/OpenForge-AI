@@ -41,14 +41,23 @@ Open `http://localhost:5173` for the frontend or `http://localhost:8000` for the
 
 ## Docker and Render
 
-Build and run the production image from the repository root:
+Create a local environment file from the template, then start the service with Docker Compose:
 
 ```powershell
-docker build -t openforge-ai .
-docker run --rm -p 10000:10000 --env-file .env openforge-ai
+Copy-Item .env.example .env
+# Edit .env and add your real server-side credentials.
+docker compose up --build -d
+docker compose ps
+docker compose logs -f openforge-ai
 ```
 
-The root `render.yaml` deploys the same multi-stage Docker image and uses `/health` for health checks. In Render, provide `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `GROQ_API_KEY`; `GITHUB_TOKEN` enables GitHub MCP tools. Keep service-role credentials and all API keys in Render's server-side environment, never in the React app.
+Stop and remove the Compose service and its default network with:
+
+```powershell
+docker compose down
+```
+
+To build the image without Compose, run `docker build -t openforge-ai .`. The image runs as a non-root user and includes a `/health` health check. The root `render.yaml` deploys the same multi-stage Docker image. In Render, provide `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `GROQ_API_KEY`; `GITHUB_TOKEN` enables GitHub MCP tools. Keep service-role credentials and all API keys in Render's server-side environment, never in the React app.
 
     ## Supabase setup
 
