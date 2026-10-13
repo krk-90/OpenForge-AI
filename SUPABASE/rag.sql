@@ -17,9 +17,7 @@ create table if not exists public.rag_documents (
     metadata jsonb not null default '{}'::jsonb,
     commit_sha text not null default '',
     embedding vector(384) not null,
-    search_vector tsvector generated always as (
-        to_tsvector('english', content || ' ' || array_to_string(symbols, ' '))
-    ) stored,
+    search_vector tsvector,
     created_at timestamptz not null default now()
 );
 
@@ -30,10 +28,49 @@ alter table public.rag_documents
     add column if not exists symbols text[] not null default '{}';
 alter table public.rag_documents
     add column if not exists metadata jsonb not null default '{}'::jsonb;
+
+do $$
+begin
+    if exists (
+        select 1
+        from pg_attribute
+        where attrelid = 'public.rag_documents'::regclass
+          and attname = 'search_vector'
+          and attgenerated <> ''
+          and not attisdropped
+    ) then
+        alter table public.rag_documents drop column search_vector;
+    end if;
+end;
+$$;
+
 alter table public.rag_documents
-    add column if not exists search_vector tsvector generated always as (
-        to_tsvector('english', content || ' ' || array_to_string(symbols, ' '))
-    ) stored;
+    add column if not exists search_vector tsvector;
+
+create or replace function public.update_rag_document_search_vector()
+returns trigger
+language plpgsql
+as $$
+begin
+    new.search_vector := to_tsvector(
+        'english',
+        coalesce(new.content, '') || ' ' || array_to_string(coalesce(new.symbols, '{}'::text[]), ' ')
+    );
+    return new;
+end;
+$$;
+
+drop trigger if exists rag_documents_search_vector_trigger on public.rag_documents;
+create trigger rag_documents_search_vector_trigger
+before insert or update of content, symbols on public.rag_documents
+for each row execute function public.update_rag_document_search_vector();
+
+update public.rag_documents
+set search_vector = to_tsvector(
+    'english',
+    coalesce(content, '') || ' ' || array_to_string(coalesce(symbols, '{}'::text[]), ' ')
+)
+where search_vector is null;
 
 create index if not exists rag_documents_scope_idx
     on public.rag_documents (user_id, repository_id);
@@ -62,10 +99,48 @@ create table if not exists public.rag_graph_nodes (
     source text not null,
     summary text not null default '',
     metadata jsonb not null default '{}'::jsonb,
-    search_vector tsvector generated always as (
-        to_tsvector('english', name || ' ' || summary)
-    ) stored
+    search_vector tsvector
 );
+
+do $$
+begin
+    if exists (
+        select 1
+        from pg_attribute
+        where attrelid = 'public.rag_graph_nodes'::regclass
+          and attname = 'search_vector'
+          and attgenerated <> ''
+          and not attisdropped
+    ) then
+        alter table public.rag_graph_nodes drop column search_vector;
+    end if;
+end;
+$$;
+
+alter table public.rag_graph_nodes
+    add column if not exists search_vector tsvector;
+
+create or replace function public.update_rag_graph_node_search_vector()
+returns trigger
+language plpgsql
+as $$
+begin
+    new.search_vector := to_tsvector(
+        'english',
+        coalesce(new.name, '') || ' ' || coalesce(new.summary, '')
+    );
+    return new;
+end;
+$$;
+
+drop trigger if exists rag_graph_nodes_search_vector_trigger on public.rag_graph_nodes;
+create trigger rag_graph_nodes_search_vector_trigger
+before insert or update of name, summary on public.rag_graph_nodes
+for each row execute function public.update_rag_graph_node_search_vector();
+
+update public.rag_graph_nodes
+set search_vector = to_tsvector('english', coalesce(name, '') || ' ' || coalesce(summary, ''))
+where search_vector is null;
 
 create table if not exists public.rag_graph_edges (
     id text primary key,
@@ -98,6 +173,35 @@ grant select, insert, update, delete on public.rag_documents to service_role;
 grant select, insert, update, delete on public.rag_repository_knowledge to service_role;
 grant select, insert, update, delete on public.rag_graph_nodes to service_role;
 grant select, insert, update, delete on public.rag_graph_edges to service_role;
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.rag_documents to authenticated;
+grant select, insert, update, delete on public.rag_repository_knowledge to authenticated;
+grant select, insert, update, delete on public.rag_graph_nodes to authenticated;
+grant select, insert, update, delete on public.rag_graph_edges to authenticated;
+
+drop policy if exists rag_documents_owner_policy on public.rag_documents;
+create policy rag_documents_owner_policy
+    on public.rag_documents for all to authenticated
+    using (auth.uid()::text = user_id)
+    with check (auth.uid()::text = user_id);
+
+drop policy if exists rag_repository_knowledge_owner_policy on public.rag_repository_knowledge;
+create policy rag_repository_knowledge_owner_policy
+    on public.rag_repository_knowledge for all to authenticated
+    using (auth.uid()::text = user_id)
+    with check (auth.uid()::text = user_id);
+
+drop policy if exists rag_graph_nodes_owner_policy on public.rag_graph_nodes;
+create policy rag_graph_nodes_owner_policy
+    on public.rag_graph_nodes for all to authenticated
+    using (auth.uid()::text = user_id)
+    with check (auth.uid()::text = user_id);
+
+drop policy if exists rag_graph_edges_owner_policy on public.rag_graph_edges;
+create policy rag_graph_edges_owner_policy
+    on public.rag_graph_edges for all to authenticated
+    using (auth.uid()::text = user_id)
+    with check (auth.uid()::text = user_id);
 
 drop function if exists public.match_rag_documents(vector, text, text, integer);
 
