@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from Agents.profile.profile_agent import DeveloperProfile
 from APP.core.tracing import trace_step
-from APP.core.resilience import invoke_with_retry
+from APP.core.resilience import invoke_with_fallback
 
 
 class MentorGuidance(BaseModel):
@@ -76,7 +76,7 @@ Repository context:
 Contributor question:
 {question}
 """
-        response = await invoke_with_retry(self.llm, prompt, operation="mentor")
+        response = await invoke_with_fallback(self.llm, prompt, operation="mentor")
         content = response.content if hasattr(response, "content") else response
         if not isinstance(content, (str, bytes, bytearray)):
             raise TypeError("Mentor model returned a non-text response")
