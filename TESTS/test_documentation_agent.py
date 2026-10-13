@@ -105,10 +105,10 @@ class DocumentationAgentTests(unittest.IsolatedAsyncioTestCase):
                     "output_format": "json",
                 },
             ) as get_doc:
-                result = await self.agent.run(self.request)
+                result = await self.agent.run(self.request, user_id="user-123")
         self.assertEqual(json.loads(result)["repository_name"], "acme/demo")
         save_doc.assert_called_once()
-        get_doc.assert_called_once_with("acme/demo")
+        get_doc.assert_called_once_with("user-123", "acme/demo")
         self.assertTrue(
             self.agent.format_documentation(documentation, "markdown").startswith("# acme/demo")
         )
@@ -124,7 +124,7 @@ class DocumentationAgentTests(unittest.IsolatedAsyncioTestCase):
                 return_value=None,
             ):
                 with self.assertRaisesRegex(RuntimeError, "was not returned by Supabase"):
-                    await self.agent.run(self.request)
+                    await self.agent.run(self.request, user_id="user-123")
 
     def test_request_and_document_constraints_are_enforced(self):
         with self.assertRaises(ValidationError):

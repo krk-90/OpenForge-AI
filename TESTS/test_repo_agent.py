@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -12,11 +13,15 @@ from MCP_server.server.github_git_server import get_openforge_tools
 
 
 async def main():
+    user_id = os.getenv("OPENFORGE_USER_ID")
+    if not user_id:
+        raise RuntimeError("Set OPENFORGE_USER_ID to a Supabase Auth user UUID")
 
     tools = await get_openforge_tools()
 
     agent = RepoDiscoveryAgent(
-        github_tools=tools
+        github_tools=tools,
+        user_id=user_id,
     )
 
     result = await agent.discover(
