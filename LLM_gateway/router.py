@@ -1,5 +1,5 @@
-from llm_gateway.provider.groq_llm import get_model
-from llm_gateway.provider.fallback import get_next_model
+from LLM_gateway.provider.groq_llm import get_model
+from LLM_gateway.provider.fallback import get_next_model
 
 
 class ModelRouter:

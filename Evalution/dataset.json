@@ -1,0 +1,130 @@
+{
+	"version": 1,
+	"description": "Live API response-contract checks for OpenForge agents.",
+	"cases": [
+		{
+			"name": "orchestrator",
+			"path": "/agents/orchestrator",
+			"payload": {
+				"session_id": "{{session_id}}",
+				"repository_id": "{{repository_id}}",
+				"message": "Explain one useful first step for understanding this repository.",
+				"repository_context": "The repository contains Python source code and automated tests."
+			},
+			"checks": {
+				"required_fields": ["answer"],
+				"non_empty_fields": ["answer"]
+			}
+		},
+		{
+			"name": "mentor",
+			"path": "/agents/mentor",
+			"payload": {
+				"session_id": "{{session_id}}",
+				"repository_id": "{{repository_id}}",
+				"message": "How should I begin a small, test-driven contribution?",
+				"repository_context": "Tests are stored in the TESTS directory and application code is grouped in packages.",
+				"profile": {
+					"experience_level": "beginner",
+					"skills": ["Python", "pytest"]
+				},
+				"issue": {
+					"title": "Add input validation",
+					"body": "Reject empty values and cover the behavior with a test."
+				}
+			},
+			"checks": {
+				"required_fields": ["issue_summary", "learning_objectives", "concepts", "approach_steps", "first_task"],
+				"non_empty_fields": ["issue_summary", "first_task"],
+				"min_list_lengths": {
+					"approach_steps": 1
+				}
+			}
+		},
+		{
+			"name": "profile",
+			"path": "/agents/profile",
+			"payload": {
+				"session_id": "{{session_id}}",
+				"profile": {
+					"display_name": "OpenForge Evaluation",
+					"skills": ["Python", "FastAPI"],
+					"interests": ["open source"],
+					"preferred_languages": ["Python"]
+				}
+			},
+			"checks": {
+				"required_fields": ["profile", "discovery_terms"],
+				"contains": {
+					"discovery_terms": ["Python", "FastAPI"]
+				}
+			}
+		},
+		{
+			"name": "pr-review",
+			"path": "/agents/pr-review",
+			"payload": {
+				"session_id": "{{session_id}}",
+				"owner": "openforge-evaluation",
+				"repo": "sample",
+				"pull_number": 1,
+				"diff": "diff --git a/src/example.py b/src/example.py\n--- a/src/example.py\n+++ b/src/example.py\n@@ -1,2 +1,3 @@\n+def first_item(items):\n+    return items[0]\n"
+			},
+			"checks": {
+				"required_fields": ["summary", "findings", "tests_to_run", "recommendation"],
+				"non_empty_fields": ["summary"],
+				"allowed_values": {
+					"recommendation": ["needs_changes", "approve_with_nits", "approve"]
+				}
+			}
+		},
+		{
+			"name": "repository-rag",
+			"path": "/agents/rag/query",
+			"payload": {
+				"session_id": "{{session_id}}",
+				"repository_id": "{{repository_id}}",
+				"question": "What does the project use for its tests?",
+				"limit": 4
+			},
+			"checks": {
+				"required_fields": ["answer", "sources", "chunk_count", "route"],
+				"non_empty_fields": ["answer", "route"]
+			}
+		},
+		{
+			"name": "documentation",
+			"path": "/agents/documentation",
+			"skip_statuses": [503],
+			"payload": {
+				"session_id": "{{session_id}}",
+				"request": {
+					"repository": {
+						"repo_url": "{{repository_url}}",
+						"analysis_depth": "basic",
+						"output_mode": "markdown"
+					},
+					"explanation_type": "repository",
+					"target_audience": "beginner",
+					"max_words": 500
+				}
+			},
+			"checks": {
+				"required_fields": ["document"],
+				"non_empty_fields": ["document"]
+			}
+		},
+		{
+			"name": "repository-discovery",
+			"path": "/agents/repository-discovery",
+			"skip_statuses": [503],
+			"payload": {
+				"session_id": "{{session_id}}",
+				"skills": ["Python", "FastAPI"]
+			},
+			"checks": {
+				"required_fields": ["repositories"]
+			}
+		}
+	]
+}

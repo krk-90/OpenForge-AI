@@ -11,18 +11,19 @@ project_root = str(Path(__file__).resolve().parents[2])
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from schemas.repo import RepositoryRecommendation
 from DATABASE.supabase_db import save_repository_search
+from schemas.repo import RepositoryRecommendation
 
 recommendations_adapter = TypeAdapter(list[RepositoryRecommendation])
 
 class RepoDiscoveryAgent:
 
-    def __init__(self, github_tools):
+    def __init__(self, github_tools, user_id: str, llm=None):
 
         self.tools = github_tools
+        self.user_id = user_id
 
-        self.llm = ChatGroq(
+        self.llm = llm or ChatGroq(
             model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
             temperature=0
         )
@@ -76,7 +77,7 @@ class RepoDiscoveryAgent:
             return []
 
         try:
-            save_repository_search(query, repositories)
+            save_repository_search(query, repositories, user_id=self.user_id)
         except Exception as e:
             print(f"Could not store repository search history in Supabase: {e}")
         return repositories
@@ -191,7 +192,17 @@ Return JSON:
             [HumanMessage(content=prompt)]
         )
 
-        return recommendations_adapter.validate_json(response.content)
+        content = response.content if hasattr(response, "content") else response
+        if not isinstance(content, str):
+            raise TypeError("Repository discovery model returned a non-text response")
+        content = content.strip()
+        if content.startswith("```"):
+            lines = content.splitlines()
+            lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            content = "\n".join(lines).strip()
+        return recommendations_adapter.validate_json(content)
 
     async def discover(
         self,

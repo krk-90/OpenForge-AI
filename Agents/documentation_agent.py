@@ -13,15 +13,10 @@ project_root = str(Path(__file__).resolve().parents[1])
 if project_root not in sys.path:
 	sys.path.insert(0, project_root)
 
-from DATABASE.supabase_db import (
-	get_generated_documentation,
-	save_generated_documentation,
-)
-from schemas.repo import (
-	DocAgentRequest,
-	DocumentationValidator,
-	RepositoryDocumentation,
-)
+from DATABASE.supabase_db import (get_generated_documentation,
+                                  save_generated_documentation)
+from schemas.repo import (DocAgentRequest, DocumentationValidator,
+                          RepositoryDocumentation)
 
 
 class DocumentationAgent:
@@ -343,7 +338,11 @@ Repository context:
 		documentation.repository_name = f"{owner}/{repository}"
 		return documentation
 
-	async def run(self, request: DocAgentRequest | dict) -> str:
+	async def run(
+		self,
+		request: DocAgentRequest | dict,
+		user_id: str | None = None,
+	) -> str:
 		request = DocAgentRequest.model_validate(request)
 		documentation = await self.generate(request)
 		owner, repository = self._repository_parts(request)
@@ -352,12 +351,15 @@ Repository context:
 			documentation,
 			request.repository.output_mode,
 		)
+		if user_id is None:
+			return generated_document
 		save_generated_documentation(
+			user_id,
 			repository_name,
 			generated_document,
 			request.repository.output_mode,
 		)
-		stored_document = get_generated_documentation(repository_name)
+		stored_document = get_generated_documentation(user_id, repository_name)
 		if not stored_document or not isinstance(stored_document.get("document"), str):
 			raise RuntimeError(
 				f"Documentation for {repository_name} was not returned by Supabase"
@@ -543,6 +545,11 @@ Repository context:
 async def main():
 	from MCP_server.server.github_git_server import get_openforge_tools
 
+	user_id = os.getenv("OPENFORGE_USER_ID") or input("Supabase Auth user UUID: ").strip()
+	if not user_id:
+		print("A Supabase Auth user UUID is required; documentation was not stored.")
+		return
+
 	repository_input = input("GitHub repository URL or owner/repo: ").strip()
 	if not repository_input:
 		print("No repository provided; documentation was not generated.")
@@ -567,7 +574,7 @@ async def main():
 		raise RuntimeError("No GitHub MCP tools are available; check GITHUB_TOKEN and MCP setup.")
 
 	agent = DocumentationAgent(tools)
-	documentation = await agent.run(request)
+	documentation = await agent.run(request, user_id=user_id)
 	print(documentation)
 
 
