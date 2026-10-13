@@ -10,8 +10,7 @@ class TemporaryProviderError(Exception):
     status_code = 503
 
 
-@pytest.mark.asyncio
-async def test_retry_async_retries_transient_provider_error():
+def test_retry_async_retries_transient_provider_error():
     calls = 0
 
     async def operation():
@@ -21,12 +20,11 @@ async def test_retry_async_retries_transient_provider_error():
             raise TemporaryProviderError("temporarily unavailable")
         return "ok"
 
-    assert await retry_async(operation, attempts=3, base_delay=0) == "ok"
+    assert asyncio.run(retry_async(operation, attempts=3, base_delay=0)) == "ok"
     assert calls == 3
 
 
-@pytest.mark.asyncio
-async def test_retry_async_does_not_retry_permanent_error():
+def test_retry_async_does_not_retry_permanent_error():
     calls = 0
 
     async def operation():
@@ -35,12 +33,11 @@ async def test_retry_async_does_not_retry_permanent_error():
         raise ValueError("invalid request")
 
     with pytest.raises(ValueError):
-        await retry_async(operation, attempts=4, base_delay=0)
+        asyncio.run(retry_async(operation, attempts=4, base_delay=0))
     assert calls == 1
 
 
-@pytest.mark.asyncio
-async def test_invoke_with_retry_records_usage_without_changing_result():
+def test_invoke_with_retry_records_usage_without_changing_result():
     class Result:
         content = "answer"
         usage_metadata = {"input_tokens": 12, "output_tokens": 5, "total_tokens": 17}
@@ -50,7 +47,7 @@ async def test_invoke_with_retry_records_usage_without_changing_result():
             assert input_data == "question"
             return Result()
 
-    result = await invoke_with_retry(FakeLLM(), "question", operation="unit_test")
+    result = asyncio.run(invoke_with_retry(FakeLLM(), "question", operation="unit_test"))
     assert result.content == "answer"
 
 
