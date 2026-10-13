@@ -68,7 +68,7 @@ If GitHub MCP tools fail to load, check the build/runtime logs and confirm the d
 
 ## LangSmith tracing
 
-Tracing is opt-in. The Render Blueprint defaults `LANGSMITH_TRACING=false`. To enable it, add these server-side environment variables in Render:
+Tracing is opt-in and disabled unless `LANGSMITH_TRACING=true` is set. To enable it, add these server-side environment variables in Render:
 
 ```env
 LANGSMITH_TRACING=true
