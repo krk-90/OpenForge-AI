@@ -10,6 +10,7 @@ from urllib.parse import urlsplit
 
 from Agents.orchestrator.prompts import build_messages
 from DATABASE.supabase_db import load_agent_memory, save_agent_memory
+from APP.core.tracing import trace_step
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ class OrchestratorAgent:
 			return cls._decode_tool_result(result["content"])
 		return result
 
+	@trace_step("orchestrator.github_issue_lookup")
 	async def _load_issue_context(self, user_input: str, repository_id: str) -> str | None:
 		if not self._needs_issue_lookup(user_input):
 			return ""
@@ -132,6 +134,7 @@ class OrchestratorAgent:
 			})
 		return json.dumps({"repository": f"{owner}/{repo}", "open_issues": issues}, ensure_ascii=False)
 
+	@trace_step("process.orchestrator")
 	async def run(
 		self,
 		user_input: str,
