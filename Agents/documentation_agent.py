@@ -15,6 +15,7 @@ if project_root not in sys.path:
 
 from DATABASE.supabase_db import (get_generated_documentation,
                                   save_generated_documentation)
+from APP.core.tracing import trace_step
 from schemas.repo import (DocAgentRequest, DocumentationValidator,
                           RepositoryDocumentation)
 
@@ -60,6 +61,7 @@ class DocumentationAgent:
 			}
 		return arguments
 
+	@trace_step("documentation.github_tool")
 	async def _invoke_tool(self, name: str, arguments: dict):
 		tool = self._find_tool(name)
 		if tool is None:
@@ -212,6 +214,7 @@ class DocumentationAgent:
 			]
 		return sorted(paths, key=self._file_priority)[: self._MAX_SOURCE_FILES]
 
+	@trace_step("documentation.collect_source_files")
 	async def _collect_source_files(
 		self,
 		owner: str,
@@ -338,6 +341,7 @@ Repository context:
 		documentation.repository_name = f"{owner}/{repository}"
 		return documentation
 
+	@trace_step("process.documentation")
 	async def run(
 		self,
 		request: DocAgentRequest | dict,
