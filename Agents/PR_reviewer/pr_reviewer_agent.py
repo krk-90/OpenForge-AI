@@ -4,6 +4,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from APP.core.tracing import trace_step
+
 
 class PRReviewFinding(BaseModel):
     severity: Literal["critical", "high", "medium", "low", "info"]
@@ -86,6 +88,7 @@ class PRReviewerAgent:
                 return result
         return result
 
+    @trace_step("pr_review.fetch_github_context")
     async def _fetch_pull_request(self, owner: str, repo: str, pull_number: int):
         arguments = {
             "owner": owner,
@@ -148,6 +151,7 @@ class PRReviewerAgent:
             return title, "\n\n".join(patches)
         return title, ""
 
+    @trace_step("process.pr_review")
     async def review(
         self,
         owner: str,
