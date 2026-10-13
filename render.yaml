@@ -18,8 +18,6 @@ services:
         sync: false
       - key: GITHUB_MCP_ALLOW_WRITE
         value: "false"
-      - key: LANGSMITH_TRACING
-        value: "false"
       - key: LANGSMITH_ENDPOINT
         value: https://api.smith.langchain.com
       - key: LANGSMITH_PROJECT
