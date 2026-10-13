@@ -5,6 +5,7 @@ import asyncio
 from Agents.RAG.generator.generation import generate_answer
 from Agents.RAG.retriever.retrieval import RetrievedChunk, SupabaseRetriever
 from Agents.RAG.router import route_query
+from APP.core.tracing import trace_step
 
 
 class RAGPipeline:
@@ -21,9 +22,11 @@ class RAGPipeline:
         self.repository_id = repository_id
         self.retriever = retriever or SupabaseRetriever(user_id, repository_id)
 
+    @trace_step("rag.retrieve")
     def retrieve(self, question: str, limit: int = 6) -> list[RetrievedChunk]:
         return self.retriever.search(question, limit=limit)
 
+    @trace_step("process.rag_pipeline")
     async def ask(self, question: str, limit: int = 6) -> str:
         plan = route_query(question)
         chunks = await asyncio.to_thread(
