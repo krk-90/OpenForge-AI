@@ -14,6 +14,8 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
 
+from APP.core.tracing import invoke_traced
+
 logger = logging.getLogger("openforge.metrics")
 T = TypeVar("T")
 RETRYABLE_STATUS_CODES = {408, 409, 425, 429, 500, 502, 503, 504}
@@ -66,7 +68,7 @@ async def invoke_with_retry(llm: Any, input_data: Any, *, operation: str) -> Any
     """Invoke a LangChain-compatible model with retries and safe latency/token telemetry."""
     started = time.perf_counter()
     try:
-        result = await retry_async(lambda: llm.ainvoke(input_data))
+        result = await retry_async(lambda: invoke_traced(llm, input_data, operation))
         duration_ms = (time.perf_counter() - started) * 1000
         usage: Any = getattr(result, "usage_metadata", None)
         if not isinstance(usage, dict):
