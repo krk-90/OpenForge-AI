@@ -5,6 +5,19 @@ OpenForge is an AI-powered open source contribution mentor that helps developers
 
 Start with the [documentation index](docs/README.md) for local setup, deployment, API usage, architecture, data and security, and evaluation.
 
+## LangSmith tracing
+
+OpenForge uses LangChain's automatic LangSmith tracing for LLM and chain calls when tracing is enabled. Add these server-side variables to your local `.env` or Render environment to inspect runs, latency, errors, and intermediate steps in the `openforge-ai` project:
+
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=openforge-ai
+```
+
+Tracing is opt-in and requires a valid API key. Keep the key server-side; never add it to frontend environment variables or commit real secrets. Prompts and model outputs may contain repository or user data, so configure LangSmith workspace access and data-retention settings appropriately.
+
 ## Run locally
 
 Install the Python dependencies and configure the server environment variables in `.env` using `.env.example` as a template. Apply `SUPABASE/setup.sql` to your Supabase project before signing in.
