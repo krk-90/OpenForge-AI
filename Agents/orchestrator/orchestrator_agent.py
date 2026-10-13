@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 from Agents.orchestrator.prompts import build_messages
 from DATABASE.supabase_db import load_agent_memory, save_agent_memory
 from APP.core.tracing import trace_step
+from APP.core.resilience import invoke_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +177,7 @@ class OrchestratorAgent:
 			repository_context,
 			history,
 		)
-		response = await self.llm.ainvoke(messages)
+		response = await invoke_with_retry(self.llm, messages, operation="orchestrator")
 		answer = response.content if hasattr(response, "content") else response
 		if not isinstance(answer, str):
 			raise TypeError("Orchestrator model returned a non-text response")
