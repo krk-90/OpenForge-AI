@@ -7,7 +7,7 @@ Start with the [documentation index](docs/README.md) for local setup, deployment
 
 ## LangSmith tracing
 
-OpenForge uses LangChain's automatic LangSmith tracing for LLM and chain calls when tracing is enabled. Add these server-side variables to your local `.env` or Render environment to inspect runs, latency, errors, and intermediate steps in the `openforge-ai` project:
+OpenForge uses LangChain's automatic LangSmith tracing for LLM calls and explicit redacted spans around FastAPI agent routes and internal processing steps (orchestration, RAG retrieval/generation, mentor, PR review, documentation, and GitHub tool stages). When tracing is enabled, these nested spans help follow a request through the pipeline. Add these server-side variables to your local `.env` or Render environment to inspect runs, latency, errors, and intermediate steps in the `openforge-ai` project:
 
 ```env
 LANGSMITH_TRACING=true
