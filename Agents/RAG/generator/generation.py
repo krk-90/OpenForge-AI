@@ -8,7 +8,7 @@ from Agents.RAG.generator.citations import SourceCiter
 from Agents.RAG.generator.compression import ContextCompressor
 from Agents.RAG.retriever.retrieval import RetrievedChunk
 from APP.core.tracing import trace_step
-from APP.core.resilience import invoke_with_retry
+from APP.core.resilience import invoke_with_fallback
 
 
 SYSTEM_PROMPT = """You are OpenForge's repository question-answering assistant.
@@ -53,7 +53,7 @@ async def generate_answer(
             f"Repository excerpts:\n{context}"
         )),
     ]
-    response = await invoke_with_retry(llm, messages, operation="repository_rag")
+    response = await invoke_with_fallback(llm, messages, operation="repository_rag")
     content = response.content
     if isinstance(content, str):
         answer = content.strip()
