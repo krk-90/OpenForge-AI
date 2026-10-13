@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from langsmith import traceable
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,6 +25,28 @@ def configure_langsmith_tracing() -> bool:
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
     os.environ.setdefault("LANGSMITH_PROJECT", "openforge-ai")
     return True
+
+
+def _safe_trace_inputs(inputs: Any) -> dict[str, Any]:
+    """Keep span inputs useful for debugging without recording user content."""
+    if isinstance(inputs, dict):
+        return {"input_keys": sorted(str(key) for key in inputs)}
+    return {"input_type": type(inputs).__name__}
+
+
+def _safe_trace_outputs(outputs: Any) -> dict[str, Any]:
+    """Record the output type, not potentially sensitive output content."""
+    return {"output_type": type(outputs).__name__}
+
+
+def trace_step(name: str):
+    """Create a redacted LangSmith span for a route or internal processing step."""
+    return traceable(
+        name=name,
+        run_type="chain",
+        process_inputs=_safe_trace_inputs,
+        process_outputs=_safe_trace_outputs,
+    )
 
 
 def trace_config(
@@ -66,4 +90,4 @@ async def invoke_traced(
     )
 
 
-__all__ = ["configure_langsmith_tracing", "invoke_traced", "trace_config", "tracing_enabled"]
+__all__ = ["configure_langsmith_tracing", "invoke_traced", "trace_config", "trace_step", "tracing_enabled"]
