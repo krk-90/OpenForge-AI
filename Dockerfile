@@ -5,25 +5,20 @@ RUN npm ci
 COPY APP/Frontend/ ./
 RUN npm run build
 
+# Use GitHub's maintained MCP server instead of the deprecated npm package.
+FROM ghcr.io/github/github-mcp-server:v1.9.0 AS github-mcp-server
+
 FROM python:3.12-slim AS app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 WORKDIR /app
 
-# The GitHub MCP fallback uses npx when Docker is unavailable.
-# Install Node.js/npm in the runtime image so that fallback can actually start.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm \
-    && rm -rf /var/lib/apt/lists/*
-
+COPY --from=github-mcp-server /server/github-mcp-server /usr/local/bin/github-mcp-server
 COPY requirements.txt requirements-rag.txt ./
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt \
     && python -c "from langchain_mcp_adapters.client import MultiServerMCPClient; from mcp.shared.context import RequestContext; print('MCP adapter imports OK')" \
-    && node --version \
-    && npm --version \
-    && npx --version \
     && useradd --create-home --uid 10001 appuser
 COPY --chown=appuser:appuser . ./
 COPY --from=frontend-build --chown=appuser:appuser /frontend/dist ./APP/Frontend/dist
