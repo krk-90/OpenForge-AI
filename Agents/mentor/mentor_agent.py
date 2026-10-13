@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from Agents.profile.profile_agent import DeveloperProfile
+from APP.core.tracing import trace_step
 
 
 class MentorGuidance(BaseModel):
@@ -29,6 +30,7 @@ class MentorAgent:
             )
         self.llm = llm
 
+    @trace_step("process.mentor")
     async def mentor(
         self,
         question: str,
