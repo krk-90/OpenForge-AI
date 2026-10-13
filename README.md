@@ -1,102 +1,65 @@
 # OpenForge-AI
 OpenForge is an AI-powered open source contribution mentor that helps developers discover, understand, and contribute to GitHub repositories. By combining GitHub intelligence, repository-aware RAG, and skill-based issue matching, OpenForge guides users from finding the right issue to submitting a successful pull request.
 
+## Documentation
 
-Repository
-    │
-    ▼
-Repository Loader
-    │
-    ▼
-Repository Cache
-    │
-    ▼
-File Filter
-(skip binaries, lock files,
-generated code, dist, build)
-    │
-    ▼
-Language Detector
-    │
-    ├─ Python
-    ├─ TypeScript
-    ├─ JavaScript
-    ├─ Java
-    └─ Go
-    │
-    ▼
-AST Parser Layer
-    │
-    ├─ Functions
-    ├─ Classes
-    ├─ Interfaces
-    ├─ Methods
-    ├─ Imports
-    └─ API Routes
-    │
-    ▼
-Code Intelligence Layer
-    │
-    ├─ Function Map
-    ├─ Class Map
-    ├─ Dependency Map
-    ├─ Call Graph
-    ├─ Route Map
-    └─ Config Map
-    │
-    ▼
-Knowledge Graph Builder
-    │
-    ▼
-Documentation Agent
-    │
-    ▼
-RepositoryKnowledge
-    │
-    ├──────────────────┐
-    │                  │
-    ▼                  ▼
-Summary Store     Metadata Store
-    │                  │
-    └────────┬─────────┘
-             ▼
-      Chunking Engine
-             │
- ┌───────────┼───────────┐
- ▼           ▼           ▼
-AST      Semantic     Hierarchical
-Chunks    Chunks        Chunks
-             │
-             ▼
-      Embedding Engine
-             │
- ┌───────────┼───────────┐
- ▼           ▼           ▼
-BM25      Vector DB   Graph DB
-Index                  Index
-             │
-             ▼
-        Query Router
-             │
- ┌───────────┼────────────┬───────────┐
- ▼           ▼            ▼           ▼
-Overview  Code Q&A   Architecture  Search
-             │
-             ▼
-     Hybrid Retrieval
-(BM25 + Dense + Graph)
-             │
-             ▼
-         Reranker
-             │
-             ▼
-   Context Compression
-             │
-             ▼
-       RAG Reasoner
-             │
-             ▼
-       Source Citer
-             │
-             ▼
-       Final Answer
+Start with the [documentation index](docs/README.md) for local setup, deployment, API usage, architecture, data and security, and evaluation.
+
+## Run locally
+
+Install the Python dependencies and configure the server environment variables in `.env` using `.env.example` as a template. Apply `SUPABASE/setup.sql` to your Supabase project before signing in.
+
+Run the API from the repository root:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m uvicorn APP.main:app --reload
+```
+
+For frontend development with Vite's API proxy, run this in a second terminal:
+
+```powershell
+cd APP/Frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173` for the frontend or `http://localhost:8000` for the API-served production build. To build the frontend bundle without Docker, run `npm run build` from `APP/Frontend`.
+
+## Docker and Render
+
+Build and run the production image from the repository root:
+
+```powershell
+docker build -t openforge-ai .
+docker run --rm -p 10000:10000 --env-file .env openforge-ai
+```
+
+The root `render.yaml` deploys the same multi-stage Docker image and uses `/health` for health checks. In Render, provide `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `GROQ_API_KEY`; `GITHUB_TOKEN` enables GitHub MCP tools. Keep service-role credentials and all API keys in Render's server-side environment, never in the React app.
+
+    ## Supabase setup
+
+    Configure `SUPABASE_URL`, `SUPABASE_KEY` (the anon key), and
+    `SUPABASE_SERVICE_ROLE_KEY` in the project `.env`. Keep the service-role key
+    server-side only. Run the complete `SUPABASE/setup.sql` file in the Supabase
+    SQL Editor to create the application tables, vector/graph storage, and retrieval
+    functions.
+
+    The storage migration covers Supabase Auth-linked developer profiles, generated
+    documentation, repository search history, agent conversation memory, and the
+    user-scoped agent response cache. The RAG migration covers indexed chunks,
+    repository knowledge, graph nodes and edges, and hybrid/vector search functions.
+
+    After login, create a chat with `POST /agents/sessions` using the bearer access
+    token. Reuse the returned `session_id` on agent requests. `GET /agents/sessions`
+    lists only the current user's chats; `GET /agents/sessions/{session_id}` returns
+    that chat's history, and `DELETE` removes that user's chat and its memory.
+
+    ## Online evaluation
+
+    Set `OPENFORGE_EVAL_ACCESS_TOKEN` to an access token for a dedicated evaluation
+    user and `OPENFORGE_EVAL_REPOSITORY_ID` to an indexed `owner/name` repository,
+    then run `python -m Evalution.online`. The runner exercises the agent endpoints
+    over HTTP, checks response contracts and persisted chat history, and deletes its
+    temporary chat unless `--keep-session` is supplied. Documentation and
+    repository-discovery calls report as skipped when GitHub MCP is unavailable.
