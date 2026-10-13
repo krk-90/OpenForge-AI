@@ -92,6 +92,36 @@ async def invoke_with_retry(llm: Any, input_data: Any, *, operation: str) -> Any
         raise
 
 
+
+async def invoke_with_fallback(llm: Any, input_data: Any, *, operation: str) -> Any:
+    """Retry the primary model, then try configured compatible generation models."""
+    try:
+        return await invoke_with_retry(llm, input_data, operation=operation)
+    except Exception as primary_error:
+        configured = os.getenv(
+            "LLM_FALLBACK_MODELS",
+            "openai/gpt-oss-20b,openai/gpt-oss-120b",
+        )
+        current = str(getattr(llm, "model_name", getattr(llm, "model", "")))
+        candidates = [name.strip() for name in configured.split(",") if name.strip()]
+        candidates = [name for name in candidates if name != current]
+        if not candidates:
+            raise
+        try:
+            from LLM_gateway.provider.groq_llm import get_model
+        except Exception:
+            logger.exception("llm_fallback_unavailable operation=%s", operation)
+            raise primary_error
+        for model_name in candidates[:3]:
+            try:
+                fallback_llm = get_model(model_name)
+                logger.warning("llm_fallback operation=%s model=%s", operation, model_name)
+                return await invoke_with_retry(fallback_llm, input_data, operation=f"{operation}:fallback")
+            except Exception:
+                logger.exception("llm_fallback_failed operation=%s model=%s", operation, model_name)
+        raise primary_error
+
+
 class InMemoryRateLimitMiddleware(BaseHTTPMiddleware):
     """Per-client sliding-window limiter. Shared storage is required across instances."""
     def __init__(self, app, requests_per_minute: int = 60, window_seconds: int = 60):
