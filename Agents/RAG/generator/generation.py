@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from Agents.RAG.generator.citations import SourceCiter
 from Agents.RAG.generator.compression import ContextCompressor
 from Agents.RAG.retriever.retrieval import RetrievedChunk
+from APP.core.tracing import trace_step
 
 
 SYSTEM_PROMPT = """You are OpenForge's repository question-answering assistant.
@@ -33,6 +34,7 @@ def _format_context(chunks: Iterable[RetrievedChunk], max_chars: int = 8000) -> 
     return "\n\n".join(parts)
 
 
+@trace_step("rag.generate_answer")
 async def generate_answer(
     llm,
     question: str,
