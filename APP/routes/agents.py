@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from Agents.memory.agent_memory import AgentMemory
 from Agents.memory.response_cache import AgentResponseCache
 from APP.core.security import bearer_scheme, get_authenticated_user_id
+from APP.core.tracing import trace_step
 from DATABASE.supabase_db import (create_agent_chat_session,
                                   delete_agent_chat_session,
                                   get_agent_chat_session,
@@ -243,6 +244,7 @@ async def _cached(
 
 
 @router.post("/orchestrator")
+@trace_step("route.orchestrator")
 async def run_orchestrator(
 	request: OrchestratorRequest,
 	user_id: CurrentUser,
@@ -266,6 +268,7 @@ async def run_orchestrator(
 
 
 @router.post("/mentor")
+@trace_step("route.mentor")
 async def run_mentor(
 	request: MentorRequest,
 	user_id: CurrentUser,
@@ -307,6 +310,7 @@ async def run_mentor(
 
 
 @router.post("/profile")
+@trace_step("route.profile.build")
 async def build_profile(
 	request: ProfileRequest,
 	user_id: CurrentUser,
@@ -345,6 +349,7 @@ async def build_profile(
 
 
 @router.get("/profile")
+@trace_step("route.profile.read")
 async def read_profile(user_id: CurrentUser) -> dict[str, Any]:
 	try:
 		profile = await asyncio.to_thread(get_developer_profile, user_id)
@@ -370,6 +375,7 @@ async def _build_profile_result(profile_data: dict[str, Any]) -> dict[str, Any]:
 
 
 @router.post("/pr-review")
+@trace_step("route.pr_review")
 async def review_pull_request(
 	request: PullRequestReviewRequest,
 	user_id: CurrentUser,
@@ -415,6 +421,7 @@ async def _review_result(request: PullRequestReviewRequest, github_tools: list[A
 
 
 @router.post("/rag/query")
+@trace_step("route.rag_query")
 async def ask_repository(
 	request: RagQuestionRequest,
 	user_id: CurrentUser,
@@ -448,6 +455,7 @@ async def ask_repository(
 
 
 @router.post("/documentation")
+@trace_step("route.documentation")
 async def generate_documentation(
 	request: DocumentationRequest,
 	user_id: CurrentUser,
@@ -495,6 +503,7 @@ def _documentation_repository_id(request: DocAgentRequest) -> str:
 
 
 @router.post("/repository-discovery")
+@trace_step("route.repository_discovery")
 async def discover_repositories(
 	request: RepositoryDiscoveryRequest,
 	user_id: CurrentUser,
