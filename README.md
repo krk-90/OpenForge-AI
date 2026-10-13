@@ -35,7 +35,7 @@ Open `http://localhost:5173` for Vite's development frontend. The API serves the
 
 ## Docker and Render
 
-The root `Dockerfile` builds the React frontend and runs the FastAPI application in a single container. It runs as a non-root user, binds to Render's `PORT` (defaulting to `10000` locally), and exposes `/health` for health checks. The runtime includes Node.js/npm because the GitHub MCP integration uses `npx` when Docker is unavailable.
+The root `Dockerfile` builds the React frontend and runs the FastAPI application in a single container. It also bundles GitHub's maintained native MCP server binary, avoiding the deprecated npm server and a Docker-in-Docker requirement on Render. The app runs as a non-root user, binds to Render's `PORT` (defaulting to `10000` locally), and exposes `/health` for health checks. The Docker build verifies that the Python MCP adapter imports successfully, so an incompatible SDK fails during build.
 
 Run locally:
 
@@ -62,7 +62,7 @@ After deployment, verify:
 2. `GET /` serves the frontend.
 3. Sign-up/login works with the configured Supabase project.
 4. A repository lookup invokes GitHub MCP and returns results.
-5. Render logs contain `MCP adapter imports OK` during the image build and `Loaded N MCP tools` at runtime when GitHub MCP is configured.
+5. Render logs contain `MCP adapter imports OK` during the image build and `Loaded N MCP tools` at runtime when GitHub MCP is configured. In read-only mode, the server exposes only explicitly allowlisted read tools; write-capable and unknown tools are excluded by default.
 
 If GitHub MCP tools fail to load, check the build/runtime logs and confirm the deployed image was rebuilt from this branch. The Docker build includes an import smoke test so incompatible MCP SDK versions fail during build rather than silently breaking the integration after deployment.
 
