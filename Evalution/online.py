@@ -12,6 +12,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+from Evalution.metrics import percentile
+
 DEFAULT_DATASET = Path(__file__).with_name("dataset.json")
 
 
@@ -261,6 +263,9 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
 	failed = sum(result["status"] == "failed" for result in results)
 	skipped = sum(result["status"] == "skipped" for result in results)
 	completed = passed + failed
+	case_latencies = [float(result["duration_ms"]) for result in results if "duration_ms" in result]
+	http_results = [result for result in results if "status_code" in result]
+	http_ok = sum(200 <= int(result["status_code"]) < 400 for result in http_results)
 	return {
 		"started_at": datetime.now(timezone.utc).isoformat(),
 		"base_url": args.base_url,
@@ -274,6 +279,13 @@ def run_evaluation(args: argparse.Namespace) -> dict[str, Any]:
 			"skipped": skipped,
 			"pass_rate": round(passed / completed, 4) if completed else 0.0,
 			"duration_ms": round((time.perf_counter() - started) * 1000, 2),
+			"latency_p50_ms": round(percentile(case_latencies, 50), 2) if case_latencies else None,
+			"latency_p95_ms": round(percentile(case_latencies, 95), 2) if case_latencies else None,
+			"http_success_rate": round(http_ok / len(http_results), 4) if http_results else None,
+			"http_requests": len(http_results),
+			"http_successes": http_ok,
+			"http_errors": len(http_results) - http_ok,
+			"latency_sample_count": len(case_latencies),
 		},
 		"results": results,
 	}
