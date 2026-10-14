@@ -224,12 +224,28 @@ LangSmith tracing is optional and disabled unless `LANGSMITH_TRACING=true` is co
 Run the online evaluation against a deployed API using a dedicated evaluation account and an indexed repository:
 
 ```bash
-python -m Evalution.online
+python -m Evalution.online --base-url "https://openforge-ai-wbjh.onrender.com" --output "evaluation-report.json"
 ```
 
 Configure `OPENFORGE_EVAL_ACCESS_TOKEN` and `OPENFORGE_EVAL_REPOSITORY_ID` for that account and repository. The runner checks HTTP response contracts and persisted chat history, and removes its temporary chat unless `--keep-session` is supplied. Documentation and repository-discovery checks are reported as skipped when GitHub MCP is unavailable.
 
-See [Testing and evaluation](docs/operations/testing-and-evaluation.md) for the current scope. Skipped checks are not passing evaluations; publish measured results rather than claiming uncollected metrics.
+### Latest recorded online run
+
+Date: **October 14, 2026** · Target: [Live deployment](https://openforge-ai-wbjh.onrender.com/)
+
+| Measure | Result |
+|---|---:|
+| Checks passed | 8 / 9 |
+| Pass rate | 88.89% |
+| Failed checks | 1 |
+| Total run duration | 61.33 s |
+| Slowest successful agent request | Repository RAG, 19.20 s |
+
+The **documentation** endpoint returned **HTTP 502** in this run (9.27 s). This is a recorded failure, not a passing result; inspect the Render runtime logs for the corresponding request before attributing the cause. Orchestrator, mentor, profile, PR review, repository RAG, repository discovery, session listing, and saved chat-history checks passed.
+
+This is one online run and measures API behavior, not answer quality. It does **not** establish RAG Recall@K/MRR, groundedness, correctness, prompt-injection resistance, token usage, or load-test performance. Latencies are from this run only and are not service-level guarantees.
+
+See [Testing and evaluation](docs/operations/testing-and-evaluation.md) for the current scope. Skipped checks are not passing evaluations; report measured results rather than claiming uncollected metrics.
 
 ## Documentation
 
