@@ -1,0 +1,86 @@
+{
+  "started_at": "2026-10-14T08:09:27.706918+00:00",
+  "base_url": "https://openforge-ai-wbjh.onrender.com",
+  "repository_id": "krk-90/OpenForge-AI",
+  "session_id": "f812b3b5-9174-456f-8fbf-177c0813c5f3",
+  "session_kept": false,
+  "summary": {
+    "total": 9,
+    "passed": 8,
+    "failed": 1,
+    "skipped": 0,
+    "pass_rate": 0.8889,
+    "duration_ms": 61326.84
+  },
+  "results": [
+    {
+      "name": "orchestrator",
+      "endpoint": "/agents/orchestrator",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 9768.28
+    },
+    {
+      "name": "mentor",
+      "endpoint": "/agents/mentor",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 4959.67
+    },
+    {
+      "name": "profile",
+      "endpoint": "/agents/profile",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 1820.86
+    },
+    {
+      "name": "pr-review",
+      "endpoint": "/agents/pr-review",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 2464.63
+    },
+    {
+      "name": "repository-rag",
+      "endpoint": "/agents/rag/query",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 19197.88
+    },
+    {
+      "name": "documentation",
+      "endpoint": "/agents/documentation",
+      "status_code": 502,
+      "status": "failed",
+      "reason": "Documentation request failed.",
+      "duration_ms": 9271.02
+    },
+    {
+      "name": "repository-discovery",
+      "endpoint": "/agents/repository-discovery",
+      "status_code": 200,
+      "status": "passed",
+      "checks": [],
+      "duration_ms": 9773.92
+    },
+    {
+      "name": "session_is_listed_for_owner",
+      "endpoint": "/agents/sessions",
+      "status": "passed",
+      "status_code": 200
+    },
+    {
+      "name": "agent_turns_saved_to_chat",
+      "endpoint": "/agents/sessions/f812b3b5-9174-456f-8fbf-177c0813c5f3",
+      "status": "passed",
+      "status_code": 200,
+      "message_count": 12
+    }
+  ]
+}
