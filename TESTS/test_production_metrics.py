@@ -74,3 +74,20 @@ def test_metrics_reject_missing_ground_truth_and_empty_latency():
 def test_nearest_rank_percentile():
     assert percentile([10, 20, 30, 40], 50) == 20
     assert percentile([10, 20, 30, 40], 95) == 40
+
+
+def test_online_evaluator_validates_response_contract():
+    from Evalution.online import evaluate_response
+
+    case = {
+        "name": "sample",
+        "path": "/sample",
+        "checks": {
+            "required_fields": ["answer"],
+            "non_empty_fields": ["answer"],
+        },
+    }
+    assert evaluate_response(case, 200, {"answer": "grounded response"})["status"] == "passed"
+    result = evaluate_response(case, 200, {"answer": ""})
+    assert result["status"] == "failed"
+    assert "Empty field: answer" in result["checks"]

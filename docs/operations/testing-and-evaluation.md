@@ -35,7 +35,7 @@ $env:OPENFORGE_EVAL_REPOSITORY_ID = "owner/indexed-repository"
 python -m Evalution.online --base-url http://127.0.0.1:8000 --output .\evaluation-report.json
 ```
 
-Documentation and repository-discovery cases are marked skipped when their optional GitHub MCP integration returns HTTP 503. Other failures produce a nonzero process exit code. The evaluator prints a JSON report with pass/fail/skip counts, pass rate, per-case timing, and the session ID.
+Documentation and repository-discovery cases are marked skipped when their optional GitHub MCP integration returns HTTP 503. Other failures produce a nonzero process exit code. The evaluator prints a JSON report with pass/fail/skip counts, pass rate, per-case timing, and the session ID. The summary also reports nearest-rank p50/p95 case latency, the number of latency samples, and HTTP success/error counts and rate for results that include an HTTP status. These latency values describe evaluator case requests, not pure model-generation time; the overall duration includes setup and cleanup. Skipped optional integrations are excluded from the pass-rate denominator. The report does not calculate answer correctness, RAG groundedness, or retrieval Recall@K/MRR unless a separate labelled dataset is evaluated.
 
 ## Suggested development loop
 
